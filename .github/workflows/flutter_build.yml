@@ -1,0 +1,50 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Flutter Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      build-number:
+        description: 'Build number in the format of "major.minor.patch.build_number".'
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ref. https://github.com/actions/checkout
+      - uses: actions/checkout@v3
+
+      # ref. https://github.com/actions/setup-java
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: '12.x'
+
+      # ref. https://github.com/marketplace/actions/flutter-fvm-config-action
+      - name: Parse an FVM config file into environment variables
+        uses: kuhnroyal/flutter-fvm-config-action@v1
+        with:
+          path: '.fvm/fvm_config.json'
+
+      # ref. https://github.com/subosito/flutter-action
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      # iOS用の.ipaファイルのビルド
+      - name: Build iOS app
+        run: flutter build ios --no-codesign
+
+      # Android用の.aabファイルのビルド
+      - name: Build Android app
+        run: flutter build appbundle
